@@ -1,5 +1,6 @@
 from flask import Blueprint, jsonify, request
 from .db import get_db_connection
+import mysql.connector
 
 bp = Blueprint('api', __name__)
 
@@ -12,7 +13,7 @@ def health():
 @bp.route('/api/rooms', methods=['GET'])
 def get_rooms():
     conn = get_db_connection()
-    cur = conn.cursor(dictionary=True)
+    cur = conn.cursor(dictionary=True, buffered=True)
     cur.execute("SELECT * FROM rooms")
     items = cur.fetchall()
     cur.close(); conn.close()
@@ -21,8 +22,8 @@ def get_rooms():
 @bp.route('/api/rooms/<int:id>', methods=['GET'])
 def get_room(id):
     conn = get_db_connection()
-    cur = conn.cursor(dictionary=True)
-    cur.execute("SELECT * FROM rooms WHERE id = ?", (id,))
+    cur = conn.cursor(dictionary=True, buffered=True)
+    cur.execute("SELECT * FROM rooms WHERE id = %s", (id,))
     item = cur.fetchone()
     cur.close(); conn.close()
     return jsonify(item) if item else ("Not Found", 404)
@@ -32,7 +33,7 @@ def create_room():
     data = request.json
     conn = get_db_connection()
     cur = conn.cursor()
-    cur.execute("INSERT INTO rooms (name, capacity, equipment) VALUES (?, ?, ?)", 
+    cur.execute("INSERT INTO rooms (name, capacity, equipment) VALUES (%s, %s, %s)", 
                 (data['name'], data['capacity'], data.get('equipment')))
     conn.commit()
     room_id = cur.lastrowid
@@ -44,7 +45,7 @@ def update_room(id):
     data = request.json
     conn = get_db_connection()
     cur = conn.cursor()
-    cur.execute("UPDATE rooms SET name=?, capacity=?, equipment=? WHERE id=?", 
+    cur.execute("UPDATE rooms SET name=%s, capacity=%s, equipment=%s WHERE id=%s", 
                 (data['name'], data['capacity'], data.get('equipment'), id))
     conn.commit()
     cur.close(); conn.close()
@@ -54,7 +55,7 @@ def update_room(id):
 def delete_room(id):
     conn = get_db_connection()
     cur = conn.cursor()
-    cur.execute("DELETE FROM rooms WHERE id=?", (id,))
+    cur.execute("DELETE FROM rooms WHERE id=%s", (id,))
     conn.commit()
     cur.close(); conn.close()
     return jsonify({"id": id, "message": "deleted"})
@@ -67,14 +68,14 @@ def get_reservations():
     query = "SELECT * FROM reservations WHERE 1=1"
     params = []
     if room_id:
-        query += " AND room_id = ?"
+        query += " AND room_id = %s"
         params.append(room_id)
     if date:
-        query += " AND date = ?"
+        query += " AND date = %s"
         params.append(date)
     
     conn = get_db_connection()
-    cur = conn.cursor(dictionary=True)
+    cur = conn.cursor(dictionary=True, buffered=True)
     cur.execute(query, tuple(params))
     items = cur.fetchall()
     cur.close(); conn.close()
@@ -85,7 +86,7 @@ def create_reservation():
     data = request.json
     conn = get_db_connection()
     cur = conn.cursor()
-    cur.execute("INSERT INTO reservations (room_id, user_name, user_email, date, start_time, end_time, purpose) VALUES (?, ?, ?, ?, ?, ?, ?)",
+    cur.execute("INSERT INTO reservations (room_id, user_name, user_email, date, start_time, end_time, purpose) VALUES (%s, %s, %s, %s, %s, %s, %s)",
                 (data['room_id'], data['user_name'], data['user_email'], data['date'], data['start_time'], data['end_time'], data['purpose']))
     conn.commit()
     res_id = cur.lastrowid
@@ -96,7 +97,7 @@ def create_reservation():
 def delete_reservation(id):
     conn = get_db_connection()
     cur = conn.cursor()
-    cur.execute("DELETE FROM reservations WHERE id=?", (id,))
+    cur.execute("DELETE FROM reservations WHERE id=%s", (id,))
     conn.commit()
     cur.close(); conn.close()
     return jsonify({"id": id, "message": "cancelled"})
