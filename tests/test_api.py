@@ -1,0 +1,19 @@
+import pytest
+from app import create_app
+
+@pytest.fixture
+def client():
+    app = create_app()
+    app.config['TESTING'] = True
+    with app.test_client() as client:
+        yield client
+
+def test_health(client):
+    rv = client.get('/health')
+    assert rv.status_code == 200
+    assert rv.json == {"status": "ok"}
+
+def test_get_rooms(client):
+    rv = client.get('/api/rooms')
+    assert rv.status_code == 200
+    assert 'items' in rv.json
