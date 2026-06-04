@@ -1,0 +1,27 @@
+services:
+  web:
+    build: .
+    ports:
+      - "5000:5000"
+    environment:
+      - DB_HOST=db
+      - DB_USER=root
+      - DB_PASSWORD=mysecretpassword
+      - DB_NAME=seminar_db
+    depends_on:
+      - db
+    restart: always
+
+  db:
+    image: mariadb:10.6
+    environment:
+      MYSQL_ROOT_PASSWORD: mysecretpassword
+      MYSQL_DATABASE: seminar_db
+    volumes:
+      - seminar_data:/var/lib/mysql
+      # 초기 스키마 자동 실행 (컨테이너 최초 생성 시만 실행됨)
+      - ./migrations:/docker-entrypoint-initdb.d
+    restart: always
+
+volumes:
+  seminar_data:
