@@ -141,25 +141,3 @@ Docker Volume을 사용하여 데이터베이스를 영구 저장합니다.
 | Database   | MariaDB 10.6               |
 | Language   | Python 3.12                |
 | Web Server | Gunicorn                   |
-
----
-
-## 📸 실행 화면
-
-### 메인 화면
-
-```markdown
-![메인 화면](./images/main.png)
-```
-
-### 세미나룸 등록
-
-```markdown
-![세미나룸 등록](./images/room-create.png)
-```
-
-### 예약 등록
-
-```markdown
-![예약 등록](./images/reservation-create.png)
-```
